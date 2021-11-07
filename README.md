@@ -33,11 +33,13 @@ difference is that the data-structures in this crate allow to find the minimum e
 Moreover, using this crate, it is possible to define more general dominance rules in addition of
 the dimension dominance.
 
- - [X] **List Pareto front**
- - [X] **Kd-tree**
- - [ ] **Point-region-tree**
+ - [X] **List Pareto front:** Simple data-structure that simply stores the elements using a vector. This data-structure is straightforward, and usually works fine for small 
+ - [X] **Kd-tree:** Tree-like data-structure in which each node contains an element and divides the space into 2 parts. This data-structure is efficient for a large number of points.
+ - [ ] **Point-region-tree:** Tree-like data-structure in which each node divides the space into 2**d sub-regions. This data-structure is efficient for a large number of points, but requires an initial lower/upper bound on the dimentions.
  - [ ] **R-tree**
- - [ ] **Bucket list**
+ - [ ] **R*-tree**
+ - [ ] **Dense-grid list:**
+ - [ ] **Sparse-grid list**
 
 
 ### Benchmarks
