@@ -106,5 +106,5 @@ pub fn bench_list_2d(nb_elts:usize) {
 
 pub fn main() {
     // bench_list_2d(1000000);
-    bench_pareto::<2>(10000000);
+    bench_pareto::<3>(1000000);
 }

@@ -28,5 +28,5 @@ debug = true # to be removed eventually
 # panic = "abort" # better cache usage related to panics
 
 [[bin]]
-name = "bench_fronts"
-path = "src/examples/bench_fronts.rs"
+name = "bench_pareto_pq"
+path = "src/examples/bench_pareto_pq.rs"

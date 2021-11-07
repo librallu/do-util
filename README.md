@@ -1,6 +1,6 @@
 # Discrete Optimization utility
 
-
+Implements various useful data-structures for discrete optimization. This crate is in active development, Pull requests welcome :).
 
 ## Set data-structures
 
@@ -10,16 +10,19 @@ Various data-structures to maintain efficiently sets
 
 ### Benchmarks
 
+ERCSP benchmark.
 
 
 ## Sub-set/Super-set queries
 
 Allows performing quick sub-set or super-set queries
 
- - [ ] **Set-trie.** See [this article](https://hal.inria.fr/hal-01506780/document) for more information.
+ - [ ] **Set-trie** See [this article](https://hal.inria.fr/hal-01506780/document) for more information.
+ - [ ] **HAT-trie** See [this article](https://ieeexplore.ieee.org/document/8478414) for more information.
 
 ### Benchmarks
 
+CGSHOP edge domination computation / Set covering pre-processing.
 
 
 ## Pareto priority-queues
@@ -31,18 +34,16 @@ Moreover, using this crate, it is possible to define more general dominance rule
 the dimension dominance.
 
  - [X] **List Pareto front**
- - [X] **Naive kd-tree**
- - [ ] **Quad-tree**
+ - [X] **Kd-tree**
+ - [ ] **Point-region-tree**
+ - [ ] **R-tree**
  - [ ] **Bucket list**
 
 
 ### Benchmarks
 
+Using random n-dimentional points. 
 
-
-## Crate status
-
-This crate is in active development, Pull requests welcome :)
 
 ## References
 
