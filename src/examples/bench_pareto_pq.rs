@@ -8,6 +8,7 @@ use do_util::pareto_pq::{
     util::{CartesianParetoElement, export_2d_visualization}
 };
 use do_util::pareto_pq::list::ListParetoFront;
+// use do_util::pareto_pq::naive_kd_tree::NaiveKDTreeFront;
 use do_util::pareto_pq::kd_tree::KDTreeFront;
 
 pub fn random_element<const NB_DIM:usize>(rng:&mut ThreadRng) -> CartesianParetoElement<NB_DIM> {
@@ -66,11 +67,14 @@ pub fn bench_pareto<const NB_DIM:usize>(nb_elts:usize) {
     println!("List structure:");
     let list_front:ListParetoFront<CartesianParetoElement<NB_DIM>> = ListParetoFront::default();
     perform_bench(&elements, list_front);
-    // TEST NAIVE KD-TREE
-    println!("Naive kd-tree structure:");
-    println!("List structure:");
-    let list_front:KDTreeFront<u16, CartesianParetoElement<NB_DIM>, NB_DIM> = KDTreeFront::default();
-    perform_bench(&elements, list_front);
+    // // TEST NAIVE KD-TREE
+    // println!("Naive kd-tree structure:");
+    // let naive_kdtree_front:NaiveKDTreeFront<u16, CartesianParetoElement<NB_DIM>, NB_DIM> = NaiveKDTreeFront::default();
+    // perform_bench(&elements, naive_kdtree_front);
+    // TEST KD-TREE
+    println!("kd-tree structure:");
+    let kdtree_front:KDTreeFront<u16, CartesianParetoElement<NB_DIM>, NB_DIM> = KDTreeFront::default();
+    perform_bench(&elements, kdtree_front);
 }
 
 pub fn bench_list_2d(nb_elts:usize) {
@@ -102,5 +106,5 @@ pub fn bench_list_2d(nb_elts:usize) {
 
 pub fn main() {
     // bench_list_2d(1000000);
-    bench_pareto::<3>(10000);
+    bench_pareto::<2>(10000000);
 }

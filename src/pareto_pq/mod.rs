@@ -47,6 +47,11 @@ where T:Ord, Elt:'a+ParetoElement<T,NB_DIM>+Eq, It:Iterator<Item=&'a Elt> {
 ///  - find_dominated_by: O(n)
 pub mod list;
 
+/// naive kd-tree implementation.
+/// maintains the pareto front as a tree-structure, in which each node stores a pareto element and
+/// possibly children dividing the space
+pub mod naive_kd_tree;
+
 /// kd-tree implementation.
 /// maintains the pareto front as a tree-structure, in which each node stores a pareto element and
 /// possibly children dividing the space

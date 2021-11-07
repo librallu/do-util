@@ -2,40 +2,34 @@ use std::{marker::PhantomData, mem::swap};
 
 use crate::pareto_pq::{ParetoElement, ParetoFront};
 
-type Link<T, Elt, const NB_DIM:usize> = Option<Box<Node<T, Elt,NB_DIM>>>;
+type Link<Elt, const NB_DIM:usize> = Option<Box<Node<Elt,NB_DIM>>>;
 
 /// node of the kd-tree.
 #[derive(Debug)]
-struct Node<T, Elt, const NB_DIM:usize> {
+struct Node<Elt, const NB_DIM:usize> {
     /// element of the node
     e:Elt,
     /// left child
-    l:Link<T, Elt,NB_DIM>,
+    l:Link<Elt,NB_DIM>,
     /// right child
-    r:Link<T, Elt,NB_DIM>,
-    /// lower and upper bounds on dimensions
-    b:[(T,T);NB_DIM]
+    r:Link<Elt,NB_DIM>,
 }
 
-impl<T, Elt, const NB_DIM:usize> Node<T, Elt,NB_DIM>
-where T:Ord+Copy, Elt:ParetoElement<T,NB_DIM> {
+impl<Elt, const NB_DIM:usize> Node<Elt,NB_DIM> {
     /// returns the node element
     pub fn elt(&self) -> &Elt { &self.e }
 
     /// returns the left child
-    pub fn left(&self) -> &Link<T, Elt,NB_DIM> { &self.l }
+    pub fn left(&self) -> &Link<Elt,NB_DIM> { &self.l }
 
     /// returns the right child
-    pub fn right(&self) -> &Link<T, Elt,NB_DIM> { &self.r }
+    pub fn right(&self) -> &Link<Elt,NB_DIM> { &self.r }
 
     /// returns a mutable reference to left child
-    pub fn left_mut(&mut self) -> &mut Link<T, Elt,NB_DIM> { &mut self.l }
+    pub fn left_mut(&mut self) -> &mut Link<Elt,NB_DIM> { &mut self.l }
 
     /// returns a mutable reference to right child
-    pub fn right_mut(&mut self) -> &mut Link<T, Elt,NB_DIM> { &mut self.r }
-
-    /// returns the bounds of the link
-    pub fn bounds(&self) -> &[(T,T);NB_DIM] { &self.b }
+    pub fn right_mut(&mut self) -> &mut Link<Elt,NB_DIM> { &mut self.r }
 
     // /// returns true iff the node is a leaf
     // pub fn is_leaf(&self) -> bool { self.l.is_none() && self.r.is_none() }
@@ -55,61 +49,26 @@ where T:Ord+Copy, Elt:ParetoElement<T,NB_DIM> {
     // }
 
     /// attch the sub-tree into the left child. Returns the previous left child
-    pub fn attach_left(&mut self, t:Link<T,Elt,NB_DIM>) -> Link<T,Elt,NB_DIM> {
+    pub fn attach_left(&mut self, t:Link<Elt,NB_DIM>) -> Link<Elt,NB_DIM> {
         let mut res = t;
         swap(&mut res, &mut self.l);
-        self.b = Self::compute_bounds(&self.e, &self.l, &self.r);
         res
     }
 
     /// attch the sub-tree into the right child. Returns the previous right child
-    pub fn attach_right(&mut self, t:Link<T,Elt,NB_DIM>) -> Link<T,Elt,NB_DIM> {
+    pub fn attach_right(&mut self, t:Link<Elt,NB_DIM>) -> Link<Elt,NB_DIM> {
         let mut res = t;
         swap(&mut res, &mut self.r);
-        self.b = Self::compute_bounds(&self.e, &self.l, &self.r);
         res
     }
 
-    pub fn new(e:Elt, l:Link<T,Elt,NB_DIM>, r:Link<T,Elt,NB_DIM>) -> Self {
-        let b = Self::compute_bounds(&e, &l, &r);
-        Self { e, l, r, b }
+    pub fn new(e:Elt, l:Link<Elt,NB_DIM>, r:Link<Elt,NB_DIM>) -> Self {
+        Self { e, l, r }
     }
 
     /// decompose the node into (elt,left,right)
-    pub fn decompose(self) -> (Elt, Link<T,Elt,NB_DIM>, Link<T,Elt,NB_DIM>) {
+    pub fn decompose(self) -> (Elt, Link<Elt,NB_DIM>, Link<Elt,NB_DIM>) {
         (self.e, self.l, self.r)
-    }
-
-    /// update bounds of the node
-    pub fn update_bounds(&mut self) {
-        self.b = Self::compute_bounds(&self.e, &self.l, &self.r);
-    }
-
-    /// compute the bounds given e, left, right
-    pub fn compute_bounds(e:&Elt, l:&Link<T,Elt,NB_DIM>, r:&Link<T,Elt,NB_DIM>) -> [(T,T);NB_DIM] {
-        let dummy_t = e.coordinates()[0];
-        let mut res:[(T,T);NB_DIM] = [(dummy_t,dummy_t);NB_DIM];
-        for (i,(a,b)) in e.coordinates().iter().zip(e.coordinates().iter())
-        .map(|(a,b)| (*a,*b)).enumerate() {
-            res[i] = (a,b);
-        }
-        if let Some(n) = l {
-            for (i,(lower,upper)) in n.bounds().iter().enumerate() {
-                res[i] = (
-                    std::cmp::min(res[i].0, *lower),
-                    std::cmp::max(res[i].1, *upper),
-                );
-            }
-        }
-        if let Some(n) = r {
-            for (i,(lower,upper)) in n.bounds().iter().enumerate() {
-                res[i] = (
-                    std::cmp::min(res[i].0, *lower),
-                    std::cmp::max(res[i].1, *upper),
-                );
-            }
-        }
-        res
     }
 }
 
@@ -117,14 +76,14 @@ where T:Ord+Copy, Elt:ParetoElement<T,NB_DIM> {
 
 /// Kd-tree based pareto front structure
 #[derive(Debug)]
-pub struct KDTreeFront<T, Elt, const NB_DIM:usize> {
+pub struct NaiveKDTreeFront<T, Elt, const NB_DIM:usize> {
     /// root node
-    root:Link<T,Elt,NB_DIM>,
+    root:Link<Elt,NB_DIM>,
     /// phantom for type T
     phantom_t:PhantomData<T>,
 }
 
-impl<T, Elt, const NB_DIM:usize> Default for KDTreeFront<T, Elt, NB_DIM> {
+impl<T, Elt, const NB_DIM:usize> Default for NaiveKDTreeFront<T, Elt, NB_DIM> {
     fn default() -> Self {
         Self {
             root: None,
@@ -133,12 +92,12 @@ impl<T, Elt, const NB_DIM:usize> Default for KDTreeFront<T, Elt, NB_DIM> {
     }
 }
 
-impl<T:Ord, Elt, const NB_DIM:usize> KDTreeFront<T, Elt, NB_DIM>
-where Elt:ParetoElement<T,NB_DIM>+Eq+std::fmt::Debug, T:Copy+std::fmt::Debug {
+impl<T:Ord, Elt, const NB_DIM:usize> NaiveKDTreeFront<T, Elt, NB_DIM>
+where Elt:ParetoElement<T,NB_DIM>+Eq+std::fmt::Debug, T:Copy {
 
     // /// pretty print of the tree structure (only for small trees)
-    // fn pretty_print_node(node:&Node<T, Elt,NB_DIM>, prefix:&str) {
-    //     println!("{}+ {:?} {:?}", prefix, node.elt(), node.bounds());
+    // fn pretty_print_node(node:&Node<Elt,NB_DIM>, prefix:&str) {
+    //     println!("{}+ {:?}", prefix, node.elt());
     //     match node.left() {
     //         None => println!("{}|\tEmpty", prefix),
     //         Some(n) => Self::pretty_print_node(
@@ -165,7 +124,7 @@ where Elt:ParetoElement<T,NB_DIM>+Eq+std::fmt::Debug, T:Copy+std::fmt::Debug {
 
 
     /// adds the element to a node without any dominance checks
-    fn rec_insert_without_check(node:&mut Node<T,Elt,NB_DIM>, elt:Elt, dim:usize) {
+    fn rec_insert_without_check(node:&mut Node<Elt,NB_DIM>, elt:Elt, dim:usize) {
         if elt.coordinates()[dim] < node.elt().coordinates()[dim] { // go left
             match node.left_mut() {
                 None => { // insert here
@@ -189,7 +148,7 @@ where Elt:ParetoElement<T,NB_DIM>+Eq+std::fmt::Debug, T:Copy+std::fmt::Debug {
                 }
             }
         }
-        node.update_bounds();
+        
     }
 
     /// adds the element to a node without any dominance checks
@@ -202,8 +161,8 @@ where Elt:ParetoElement<T,NB_DIM>+Eq+std::fmt::Debug, T:Copy+std::fmt::Debug {
     }
 
     /// recursive search function. Returns the node with its decision dimension (depth % NB_DIM)
-    fn rec_search<'a>(link:&'a mut Link<T,Elt,NB_DIM>, elt:&Elt, dim:usize)
-    -> (&'a mut Link<T,Elt,NB_DIM>, Option<usize>) {
+    fn rec_search<'a>(link:&'a mut Link<Elt,NB_DIM>, elt:&Elt, dim:usize)
+    -> (&'a mut Link<Elt, NB_DIM>, Option<usize>) {
         if link.is_none() {
             (link, None)
         } else if link.as_ref().unwrap().elt() == elt {
@@ -220,58 +179,76 @@ where Elt:ParetoElement<T,NB_DIM>+Eq+std::fmt::Debug, T:Copy+std::fmt::Debug {
     }
 
     /// search an element in the tree. Returns the node and the decision dimension (depth % NB_DIM)
-    fn search(&mut self, elt:&Elt) -> (&mut Link<T,Elt,NB_DIM>, Option<usize>) {
+    fn search(&mut self, elt:&Elt) -> (&mut Link<Elt, NB_DIM>, Option<usize>) {
         Self::rec_search(&mut self.root, elt, 0)
     }
 
+    // fn search_minimum(&mut self, target_dim:usize) -> Option<&Elt> {
+    //     Self::rec_search_minimum(&mut self.root, 0, target_dim).0.as_ref()
+    //         .map(|n| n.elt())
+    // }
+
     /// recursive function to search a minimum node given a dimension
-    fn rec_search_minimum(link:&mut Link<T,Elt,NB_DIM>, dim:usize, target_dim:usize)
-    -> (&mut Link<T,Elt,NB_DIM>, Option<usize>, Option<T>) {
+    fn rec_search_minimum(link:&mut Link<Elt,NB_DIM>, dim:usize, target_dim:usize)
+    -> (&mut Link<Elt, NB_DIM>, Option<usize>, Option<T>) {
         match link {
             None => (link, None, None),
             Some(node) => {
-                // identify the direction to search
-                let v_e = node.elt().coordinates()[target_dim];
-                let v_l = node.left().as_ref().map(|n| n.bounds()[target_dim].0);
-                let v_r = node.right().as_ref().map(|n| n.bounds()[target_dim].0);
-                match (v_l, v_r) {
-                    (None, None) => (link, Some(dim), Some(v_e)),
-                    (None, Some(vr)) => {
-                        if vr < v_e {
-                            Self::rec_search_minimum(
-                                link.as_mut().unwrap().right_mut(), (dim+1)%NB_DIM, target_dim
-                            )
-                        } else { (link, Some(dim), Some(v_e)) }
-                    },
-                    (Some(vl), None) => {
-                        if vl < v_e {
-                            Self::rec_search_minimum(
-                                link.as_mut().unwrap().left_mut(), (dim+1)%NB_DIM, target_dim
-                            )
-                        } else { (link, Some(dim), Some(v_e)) }
-                    },
-                    (Some(vl), Some(vr)) => {
-                        if vl < v_e && vl < vr {
-                            Self::rec_search_minimum(
-                                link.as_mut().unwrap().left_mut(), (dim+1)%NB_DIM, target_dim
-                            )
-                        } else if vr < v_e {
-                            Self::rec_search_minimum(
-                                link.as_mut().unwrap().right_mut(), (dim+1)%NB_DIM, target_dim
-                            )
-                        } else { (link, Some(dim), Some(v_e)) }
-                    },
+                let ev = node.elt().coordinates()[target_dim];
+                if dim == target_dim {
+                    if node.left().is_none() {
+                        (link, Some(dim), Some(ev))
+                    } else {
+                        Self::rec_search_minimum(
+                            link.as_mut().unwrap().left_mut(), (dim+1)%NB_DIM, target_dim
+                        )
+                    }
+                } else { // search left and right
+                    let l_v = Self::rec_search_minimum(
+                        link.as_mut().unwrap().left_mut(), (dim+1)%NB_DIM, target_dim
+                    ).2;
+                    let r_v = Self::rec_search_minimum(
+                        link.as_mut().unwrap().right_mut(), (dim+1)%NB_DIM, target_dim
+                    ).2;
+                    match (l_v, r_v) {
+                        (None, None) => (link, Some(dim), Some(ev)),
+                        (None, Some(rv)) => {
+                            if rv < ev {
+                                Self::rec_search_minimum(
+                                    link.as_mut().unwrap().right_mut(), (dim+1)%NB_DIM, target_dim
+                                )
+                            } else { (link, Some(dim), Some(ev)) }
+                        },
+                        (Some(lv), None) => {
+                            if lv < ev {
+                                Self::rec_search_minimum(
+                                    link.as_mut().unwrap().left_mut(), (dim+1)%NB_DIM, target_dim
+                                )
+                            } else { (link, Some(dim), Some(ev)) }
+                        },
+                        (Some(lv), Some(rv)) => {
+                            if lv < ev && lv < rv { // left
+                                Self::rec_search_minimum(
+                                    link.as_mut().unwrap().left_mut(), (dim+1)%NB_DIM, target_dim
+                                )
+                            } else if rv < ev { // right
+                                Self::rec_search_minimum(
+                                    link.as_mut().unwrap().right_mut(), (dim+1)%NB_DIM, target_dim
+                                )
+                            } else { (link, Some(dim), Some(ev)) }
+                        },
+                    }
                 }
             }
         }
     }
 
     /// removes a node in the tree
-    fn remove_link(link: &mut Link<T,Elt,NB_DIM>, dim:usize) -> Option<Elt> {
+    fn remove_link(link: &mut Link<Elt,NB_DIM>, dim:usize) -> Option<Elt> {
         match link.take() {
             None => None, // link is empty, do nothing
             Some(mut node) => {
-                let res = match (node.left_mut().take(), node.right_mut().take()) {
+                match (node.left_mut().take(), node.right_mut().take()) {
                     (None, None) => { // node is a leaf, just decompose and return the element
                         let (res,_,_) = node.decompose();
                         Some(res)
@@ -285,7 +262,6 @@ where Elt:ParetoElement<T,NB_DIM>+Eq+std::fmt::Debug, T:Copy+std::fmt::Debug {
                         swap(&mut elt, &mut node.e);
                         node.l = left;
                         node.r = right;
-                        node.update_bounds();
                         *link = Some(node);
                         Some(elt)
                     },
@@ -298,12 +274,10 @@ where Elt:ParetoElement<T,NB_DIM>+Eq+std::fmt::Debug, T:Copy+std::fmt::Debug {
                         let mut elt = Self::remove_link(min_link, dim).unwrap();
                         swap(&mut elt, &mut node.e);
                         node.r = right;
-                        node.update_bounds();
                         *link = Some(node);
                         Some(elt)
                     }
-                };
-                res
+                }
             }
         }
     }
@@ -323,15 +297,11 @@ where Elt:ParetoElement<T,NB_DIM>+Eq+std::fmt::Debug, T:Copy+std::fmt::Debug {
     /// returns true if the front is empty
     pub fn is_empty(&self) -> bool { self.root.is_none() }
 
-    /// recursive search for a dominating node. Returns a node dominating the element if it exists
-    fn rec_exists_dominating<'a>(link: &'a Link<T,Elt,NB_DIM>, elt:&Elt) -> Option<&'a Elt> {
+    /// recursive search for a dominating node
+    fn rec_exists_dominating<'a>(link: &'a Link<Elt,NB_DIM>, elt:&Elt) -> Option<&'a Elt> {
         match link {
             None => None,
             Some(node) => {
-                // if the element has a coordinate lower than the bound, return None
-                for (i,d) in elt.coordinates().iter().enumerate() {
-                    if d < &node.bounds()[i].0 { return None; }
-                }
                 if node.elt().dominates(elt) { Some(node.elt()) }
                 else {
                     match Self::rec_exists_dominating(node.left(), elt) {
@@ -343,13 +313,9 @@ where Elt:ParetoElement<T,NB_DIM>+Eq+std::fmt::Debug, T:Copy+std::fmt::Debug {
         }
     }
 
-    /// remove elements dominated by the given element
-    fn rec_remove_dominated_by(link: &mut Link<T,Elt,NB_DIM>, elt:&Elt, dim:usize) {
+    /// remove nodes having their dominated by the given element
+    fn rec_remove_dominated_by(link: &mut Link<Elt,NB_DIM>, elt:&Elt, dim:usize) {
         if let Some(node) = link {
-            // if the element has a coordinate larger than the bound, return None
-            for (i,d) in elt.coordinates().iter().enumerate() {
-                if d > &node.bounds()[i].1 { return; }
-            }
             Self::rec_remove_dominated_by(node.left_mut(), elt, (dim+1)%NB_DIM);
             Self::rec_remove_dominated_by(node.right_mut(), elt, (dim+1)%NB_DIM);
             if elt.dominates(node.elt()) {
@@ -359,9 +325,10 @@ where Elt:ParetoElement<T,NB_DIM>+Eq+std::fmt::Debug, T:Copy+std::fmt::Debug {
     }
 }
 
-impl<'a, T, Elt, const NB_DIM:usize> ParetoFront<'a,T,Elt,core::slice::Iter<'a,Elt>,NB_DIM>
-for KDTreeFront<T,Elt,NB_DIM>
-where T:Ord+Copy+std::fmt::Debug, Elt:ParetoElement<T,NB_DIM>+Eq+std::fmt::Debug {
+impl<'a, T, Elt, const NB_DIM:usize> ParetoFront<'a,T,Elt,
+    core::slice::Iter<'a,Elt>,
+    NB_DIM
+> for NaiveKDTreeFront<T, Elt, NB_DIM> where T:Ord+Copy, Elt:ParetoElement<T,NB_DIM>+Eq+std::fmt::Debug {
     fn query(&'a self, _min_bound:&[T;NB_DIM], _max_bound:&[T;NB_DIM]) -> Vec<&'a Elt> {
         todo!()
     }
@@ -409,7 +376,7 @@ pub mod test {
 
     #[test]
     pub fn test_simple() {
-        let mut front:KDTreeFront<u16, CartesianParetoElement<2>, 2> = KDTreeFront::default();
+        let mut front:NaiveKDTreeFront<u16, CartesianParetoElement<2>, 2> = NaiveKDTreeFront::default();
         front.insert_without_check(CartesianParetoElement::new([0,1]));
         front.insert_without_check(CartesianParetoElement::new([1,0]));
         front.insert_without_check(CartesianParetoElement::new([2,0]));
@@ -425,7 +392,7 @@ pub mod test {
 
     #[test]
     pub fn test_find_min_0() {
-        let mut front:KDTreeFront<u16, CartesianParetoElement<2>, 2> = KDTreeFront::default();
+        let mut front:NaiveKDTreeFront<u16, CartesianParetoElement<2>, 2> = NaiveKDTreeFront::default();
         front.insert_without_check(CartesianParetoElement::new([0,10]));
         front.insert_without_check(CartesianParetoElement::new([10,5]));
         front.insert_without_check(CartesianParetoElement::new([20,0]));
@@ -435,7 +402,7 @@ pub mod test {
     
     #[test]
     pub fn test_find_min_1() {
-        let mut front:KDTreeFront<u16, CartesianParetoElement<2>, 2> = KDTreeFront::default();
+        let mut front:NaiveKDTreeFront<u16, CartesianParetoElement<2>, 2> = NaiveKDTreeFront::default();
         front.insert_without_check(CartesianParetoElement::new([0,10]));
         front.insert_without_check(CartesianParetoElement::new([10,5]));
         front.insert_without_check(CartesianParetoElement::new([20,0]));
@@ -445,14 +412,14 @@ pub mod test {
 
     #[test]
     pub fn test_remove_empty() {
-        let mut front:KDTreeFront<u16, CartesianParetoElement<2>, 2> = KDTreeFront::default();
+        let mut front:NaiveKDTreeFront<u16, CartesianParetoElement<2>, 2> = NaiveKDTreeFront::default();
         assert!(front.remove_and_return(&CartesianParetoElement::new([0,0])).is_none());
     }
 
 
     #[test]
     pub fn test_remove_1() {
-        let mut front:KDTreeFront<u16, CartesianParetoElement<2>, 2> = KDTreeFront::default();
+        let mut front:NaiveKDTreeFront<u16, CartesianParetoElement<2>, 2> = NaiveKDTreeFront::default();
         front.insert_without_check(CartesianParetoElement::new([10,10]));
         assert!(front.remove_and_return(&CartesianParetoElement::new([10,10])).is_some());
         assert!(front.is_empty());
@@ -460,7 +427,7 @@ pub mod test {
 
     #[test]
     pub fn test_remove_2() {
-        let mut front:KDTreeFront<u16, CartesianParetoElement<2>, 2> = KDTreeFront::default();
+        let mut front:NaiveKDTreeFront<u16, CartesianParetoElement<2>, 2> = NaiveKDTreeFront::default();
         front.insert_without_check(CartesianParetoElement::new([10,10]));
         assert!(front.remove_and_return(&CartesianParetoElement::new([0,0])).is_none());
         assert!(!front.is_empty());
@@ -468,7 +435,7 @@ pub mod test {
 
     #[test]
     pub fn test_remove_3() { // delete center, right, left
-        let mut front:KDTreeFront<u16, CartesianParetoElement<2>, 2> = KDTreeFront::default();
+        let mut front:NaiveKDTreeFront<u16, CartesianParetoElement<2>, 2> = NaiveKDTreeFront::default();
         front.insert_without_check(CartesianParetoElement::new([10,10]));
         front.insert_without_check(CartesianParetoElement::new([5,5]));
         front.insert_without_check(CartesianParetoElement::new([20,20]));
@@ -491,7 +458,7 @@ pub mod test {
 
     #[test]
     pub fn test_remove_4() { // delete right, center, left
-        let mut front:KDTreeFront<u16, CartesianParetoElement<2>, 2> = KDTreeFront::default();
+        let mut front:NaiveKDTreeFront<u16, CartesianParetoElement<2>, 2> = NaiveKDTreeFront::default();
         front.insert_without_check(CartesianParetoElement::new([10,10]));
         front.insert_without_check(CartesianParetoElement::new([5,5]));
         front.insert_without_check(CartesianParetoElement::new([20,20]));
@@ -514,7 +481,7 @@ pub mod test {
 
     #[test]
     pub fn test_remove_5() { // delete left, center, right
-        let mut front:KDTreeFront<u16, CartesianParetoElement<2>, 2> = KDTreeFront::default();
+        let mut front:NaiveKDTreeFront<u16, CartesianParetoElement<2>, 2> = NaiveKDTreeFront::default();
         front.insert_without_check(CartesianParetoElement::new([10,10]));
         front.insert_without_check(CartesianParetoElement::new([5,5]));
         front.insert_without_check(CartesianParetoElement::new([20,20]));
@@ -537,7 +504,7 @@ pub mod test {
 
     #[test]
     pub fn test_pop_min_1() {
-        let mut front:KDTreeFront<u16, CartesianParetoElement<2>, 2> = KDTreeFront::default();
+        let mut front:NaiveKDTreeFront<u16, CartesianParetoElement<2>, 2> = NaiveKDTreeFront::default();
         front.insert_without_check(CartesianParetoElement::new([10,10]));
         front.insert_without_check(CartesianParetoElement::new([5,5]));
         front.insert_without_check(CartesianParetoElement::new([20,20]));
@@ -549,7 +516,7 @@ pub mod test {
 
     #[test]
     pub fn test_insert_no_domination() {
-        let mut front:KDTreeFront<u16, CartesianParetoElement<2>, 2> = KDTreeFront::default();
+        let mut front:NaiveKDTreeFront<u16, CartesianParetoElement<2>, 2> = NaiveKDTreeFront::default();
         front.insert(CartesianParetoElement::new([5,10]));
         front.insert(CartesianParetoElement::new([10,5]));
         assert_eq!(front.pop_minimum_element(0).unwrap(), CartesianParetoElement::new([5,10]));
@@ -559,7 +526,7 @@ pub mod test {
 
     #[test]
     pub fn test_insert_domination_by_existing() {
-        let mut front:KDTreeFront<u16, CartesianParetoElement<2>, 2> = KDTreeFront::default();
+        let mut front:NaiveKDTreeFront<u16, CartesianParetoElement<2>, 2> = NaiveKDTreeFront::default();
         assert!(front.insert(CartesianParetoElement::new([5,5])));
         assert!(!front.insert(CartesianParetoElement::new([10,10])));
         assert_eq!(front.pop_minimum_element(0).unwrap(), CartesianParetoElement::new([5,5]));
@@ -568,7 +535,7 @@ pub mod test {
 
     #[test]
     pub fn test_insert_domination_by_inserted() {
-        let mut front:KDTreeFront<u16, CartesianParetoElement<2>, 2> = KDTreeFront::default();
+        let mut front:NaiveKDTreeFront<u16, CartesianParetoElement<2>, 2> = NaiveKDTreeFront::default();
         assert!(front.insert(CartesianParetoElement::new([10,10])));
         assert!(front.insert(CartesianParetoElement::new([5,5])));
         assert_eq!(front.pop_minimum_element(0).unwrap(), CartesianParetoElement::new([5,5]));
