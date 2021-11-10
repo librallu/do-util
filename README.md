@@ -10,7 +10,6 @@ Various data-structures to maintain efficiently sets
 
 ### Benchmarks
 
-ERCSP benchmark.
 
 
 ## Sub-set/Super-set queries
@@ -22,7 +21,7 @@ Allows performing quick sub-set or super-set queries
 
 ### Benchmarks
 
-CGSHOP edge domination computation / Set covering pre-processing.
+Set covering pre-processing.
 
 
 ## Pareto priority-queues
@@ -34,17 +33,17 @@ Moreover, using this crate, it is possible to define more general dominance rule
 the dimension dominance.
 
  - [X] **List Pareto front:** Simple data-structure that simply stores the elements using a vector. This data-structure is straightforward, and usually works fine for small 
- - [X] **Kd-tree:** Tree-like data-structure in which each node contains an element and divides the space into 2 parts. This data-structure is efficient for a large number of points.
- - [ ] **Point-region-tree:** Tree-like data-structure in which each node divides the space into 2**d sub-regions. This data-structure is efficient for a large number of points, but requires an initial lower/upper bound on the dimentions.
- - [ ] **R-tree**
- - [ ] **R*-tree**
- - [ ] **Dense-grid list:**
+ - [X] **Kd-tree:** Data-structure in which each node contains an element and divides the space into 2 parts. This data-structure is efficient for a large number of points.
+ - [ ] **Point-region-tree:** Data-structure in which each node divides the space into 2**d sub-regions. This data-structure is efficient for a large number of points, but requires an initial lower/upper bound on the dimentions.
+ - [ ] **R-tree:** Data-structure in which elements are stored in bounding boxes. Bounding boxes may intersect.
+ - [ ] **R\*-tree:**
+ - [ ] **Dense-grid list:** Flat data-structure that stores each element in "buckets" of predefined size. When it is created, the grid list has to be defined with a bucket-size for each dimension and kwnow bounds for each dimension.
  - [ ] **Sparse-grid list**
 
 
 ### Benchmarks
 
-Using random n-dimentional points. 
+Random n-dimentional points. 
 
 
 ## References

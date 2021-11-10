@@ -18,7 +18,7 @@ struct Node<T, Elt, const NB_DIM:usize> {
 }
 
 impl<T, Elt, const NB_DIM:usize> Node<T, Elt,NB_DIM>
-where T:Ord+Copy, Elt:ParetoElement<T,NB_DIM> {
+where T:Ord+Copy, Elt:ParetoElement<T>{
     /// returns the node element
     pub fn elt(&self) -> &Elt { &self.e }
 
@@ -87,10 +87,10 @@ where T:Ord+Copy, Elt:ParetoElement<T,NB_DIM> {
 
     /// compute the bounds given e, left, right
     pub fn compute_bounds(e:&Elt, l:&Link<T,Elt,NB_DIM>, r:&Link<T,Elt,NB_DIM>) -> [(T,T);NB_DIM] {
-        let dummy_t = e.coordinates()[0];
+        let dummy_t = e.kth(0);
         let mut res:[(T,T);NB_DIM] = [(dummy_t,dummy_t);NB_DIM];
-        for (i,(a,b)) in e.coordinates().iter().zip(e.coordinates().iter())
-        .map(|(a,b)| (*a,*b)).enumerate() {
+        for (i,(a,b)) in e.coordinates().zip(e.coordinates())
+        .map(|(a,b)| (a,b)).enumerate() {
             res[i] = (a,b);
         }
         if let Some(n) = l {
@@ -134,7 +134,7 @@ impl<T, Elt, const NB_DIM:usize> Default for KDTreeFront<T, Elt, NB_DIM> {
 }
 
 impl<T:Ord, Elt, const NB_DIM:usize> KDTreeFront<T, Elt, NB_DIM>
-where Elt:ParetoElement<T,NB_DIM>+Eq+std::fmt::Debug, T:Copy+std::fmt::Debug {
+where Elt:ParetoElement<T>+Eq+std::fmt::Debug, T:Copy+std::fmt::Debug {
 
     // /// pretty print of the tree structure (only for small trees)
     // fn pretty_print_node(node:&Node<T, Elt,NB_DIM>, prefix:&str) {
@@ -166,7 +166,7 @@ where Elt:ParetoElement<T,NB_DIM>+Eq+std::fmt::Debug, T:Copy+std::fmt::Debug {
 
     /// adds the element to a node without any dominance checks
     fn rec_insert_without_check(node:&mut Node<T,Elt,NB_DIM>, elt:Elt, dim:usize) {
-        if elt.coordinates()[dim] < node.elt().coordinates()[dim] { // go left
+        if elt.kth(dim) < node.elt().kth(dim) { // go left
             match node.left_mut() {
                 None => { // insert here
                     node.attach_left(Some(Box::new(
@@ -210,7 +210,7 @@ where Elt:ParetoElement<T,NB_DIM>+Eq+std::fmt::Debug, T:Copy+std::fmt::Debug {
             (link, Some(dim))
         } else {
             let next_link = if
-            elt.coordinates()[dim] < link.as_ref().unwrap().elt().coordinates()[dim] { // go left
+            elt.kth(dim) < link.as_ref().unwrap().elt().kth(dim) { // go left
                 link.as_mut().unwrap().left_mut()
             } else { // go right
                 link.as_mut().unwrap().right_mut()
@@ -231,7 +231,7 @@ where Elt:ParetoElement<T,NB_DIM>+Eq+std::fmt::Debug, T:Copy+std::fmt::Debug {
             None => (link, None, None),
             Some(node) => {
                 // identify the direction to search
-                let v_e = node.elt().coordinates()[target_dim];
+                let v_e = node.elt().kth(target_dim);
                 let v_l = node.left().as_ref().map(|n| n.bounds()[target_dim].0);
                 let v_r = node.right().as_ref().map(|n| n.bounds()[target_dim].0);
                 match (v_l, v_r) {
@@ -329,8 +329,8 @@ where Elt:ParetoElement<T,NB_DIM>+Eq+std::fmt::Debug, T:Copy+std::fmt::Debug {
             None => None,
             Some(node) => {
                 // if the element has a coordinate lower than the bound, return None
-                for (i,d) in elt.coordinates().iter().enumerate() {
-                    if d < &node.bounds()[i].0 { return None; }
+                for (i,d) in elt.coordinates().enumerate() {
+                    if d < node.bounds()[i].0 { return None; }
                 }
                 if node.elt().dominates(elt) { Some(node.elt()) }
                 else {
@@ -347,8 +347,8 @@ where Elt:ParetoElement<T,NB_DIM>+Eq+std::fmt::Debug, T:Copy+std::fmt::Debug {
     fn rec_remove_dominated_by(link: &mut Link<T,Elt,NB_DIM>, elt:&Elt, dim:usize) {
         if let Some(node) = link {
             // if the element has a coordinate larger than the bound, return None
-            for (i,d) in elt.coordinates().iter().enumerate() {
-                if d > &node.bounds()[i].1 { return; }
+            for (i,d) in elt.coordinates().enumerate() {
+                if d > node.bounds()[i].1 { return; }
             }
             Self::rec_remove_dominated_by(node.left_mut(), elt, (dim+1)%NB_DIM);
             Self::rec_remove_dominated_by(node.right_mut(), elt, (dim+1)%NB_DIM);
@@ -359,10 +359,12 @@ where Elt:ParetoElement<T,NB_DIM>+Eq+std::fmt::Debug, T:Copy+std::fmt::Debug {
     }
 }
 
-impl<'a, T, Elt, const NB_DIM:usize> ParetoFront<'a,T,Elt,core::slice::Iter<'a,Elt>,NB_DIM>
+
+impl<T, Elt, const NB_DIM:usize> ParetoFront<T,Elt>
 for KDTreeFront<T,Elt,NB_DIM>
-where T:Ord+Copy+std::fmt::Debug, Elt:ParetoElement<T,NB_DIM>+Eq+std::fmt::Debug {
-    fn query(&'a self, _min_bound:&[T;NB_DIM], _max_bound:&[T;NB_DIM]) -> Vec<&'a Elt> {
+where T:Ord+Copy+std::fmt::Debug, Elt:ParetoElement<T>+Eq+std::fmt::Debug {
+
+    fn query(&self, _min_bound:&[T], _max_bound:&[T]) -> Vec<&Elt> {
         todo!()
     }
 
@@ -376,6 +378,13 @@ where T:Ord+Copy+std::fmt::Debug, Elt:ParetoElement<T,NB_DIM>+Eq+std::fmt::Debug
             },
             None => None,
         }
+    }
+
+    fn peek_minimum_element(&mut self, dim:usize) -> Option<&Elt> {
+        let (min_node,_,_) = Self::rec_search_minimum(
+            &mut self.root, 0, dim
+        );
+        min_node.as_ref().map(|e| e.elt())
     }
 
     fn find_dominating(&self, elt:&Elt) -> Option<&Elt> {
@@ -395,8 +404,8 @@ where T:Ord+Copy+std::fmt::Debug, Elt:ParetoElement<T,NB_DIM>+Eq+std::fmt::Debug
         self.remove_and_return(elt).is_some()
     }
 
-    fn iter(&'a self) -> core::slice::Iter<'a,Elt> {
-        todo!()
+    fn create_empty() -> Self {
+        Self::default()
     }
 }
 

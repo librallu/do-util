@@ -1,8 +1,4 @@
-use std::{fs::File, io::Write};
-
-use serde_json::json;
-
-use crate::pareto_pq::{ParetoElement, ParetoFront};
+use crate::pareto_pq::{ParetoElement};
 
 
 /// Simple 2D point for the pareto front
@@ -12,8 +8,10 @@ pub struct CartesianParetoElement<const NB_DIM:usize> {
     coords:[u16;NB_DIM]
 }
 
-impl<const NB_DIM:usize> ParetoElement<u16,NB_DIM> for CartesianParetoElement<NB_DIM> {
-    fn coordinates(&self) -> &[u16;NB_DIM] { &self.coords }
+impl<const NB_DIM:usize> ParetoElement<u16> for CartesianParetoElement<NB_DIM> {
+    type CoordIterator = std::array::IntoIter<u16,NB_DIM>;
+
+    fn coordinates(&self) -> Self::CoordIterator { self.coords.into_iter() }
 
     fn dominates(&self, other:&Self) -> bool {
         for i in 0..NB_DIM {
@@ -21,6 +19,10 @@ impl<const NB_DIM:usize> ParetoElement<u16,NB_DIM> for CartesianParetoElement<NB
         }
         true
     }
+
+    fn nb_dimensions(&self) -> usize { NB_DIM }
+
+    fn kth(&self, k:usize) -> u16 { self.coords[k] }
 }
 
 impl<const NB_DIM:usize> CartesianParetoElement<NB_DIM> {
@@ -29,62 +31,6 @@ impl<const NB_DIM:usize> CartesianParetoElement<NB_DIM> {
         Self { coords }
     }
 }
-
-
-/// generates 2D visualization of a pareto front using vega-lite
-pub fn generate_2d_visualization<
-    'a,
-    T:Ord+Into<f64>+Copy,
-    Elt:'a+ParetoElement<T,2>+Eq,
-    It:Iterator<Item=&'a Elt>,
-    Front:ParetoFront<'a, T, Elt, It, 2>
->(front:&'a Front) -> String {
-    // create data values
-    let mut values:Vec<serde_json::Value> = Vec::new();
-    for elt in front.iter() {
-        values.push(json!({"x":elt.coordinates()[0].into(), "y":elt.coordinates()[1].into()}));
-    }
-    // create vegalite json object
-    let json_res = json!({
-        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-        "title": "node feature visualization",
-        "width": 500,
-        "height": 250,
-        "data": {
-            "values": values
-        },
-        "encoding": {
-            "x": {
-                "field": "x",
-                "title": "x",
-                "type": "quantitative"
-            },
-            "y": {
-                "field": "y",
-                "title": "y",
-                "type": "quantitative"
-            }
-        },
-        "layer": [
-            {"mark": {"type": "point", "shape": "circle", "filled": true}}
-        ]
-    });
-    serde_json::to_string_pretty(&json_res).unwrap()
-}
-
-/// exports vega-lite 2d pareto front in a file
-pub fn export_2d_visualization<
-    'a,
-    T:Ord+Into<f64>+Copy,
-    Elt:'a+ParetoElement<T,2>+Eq,
-    It:Iterator<Item=&'a Elt>,
-    Front:ParetoFront<'a, T, Elt, It, 2>
->(front:&'a Front, filename:&str) {
-    let mut file = File::create(filename)
-        .expect("unable to open the file");
-    file.write_all(generate_2d_visualization(front).as_bytes())
-        .expect("unable to write file content");
-} 
 
 
 

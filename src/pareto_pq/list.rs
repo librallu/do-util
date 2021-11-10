@@ -6,14 +6,12 @@ pub struct ListParetoFront<Elm> {
     elements:Vec<Elm>,
 }
 
-impl<'a, T, Elt, const NB_DIM:usize> ParetoFront<'a,T,Elt,
-    core::slice::Iter<'a,Elt>,
-    NB_DIM
-> for ListParetoFront<Elt> where T:Ord, Elt:ParetoElement<T,NB_DIM>+Eq {
-    fn query(&'a self, min_bound:&[T;NB_DIM], max_bound:&[T;NB_DIM]) -> Vec<&'a Elt> {
+impl<T, Elt> ParetoFront<T,Elt>
+for ListParetoFront<Elt> where T:Ord, Elt:ParetoElement<T>+Eq {
+    fn query(&self, min_bound:&[T], max_bound:&[T]) -> Vec<&Elt> {
         self.elements.iter().filter(|elt| {
-            elt.coordinates().iter().enumerate().all(|(i,v)| {
-                min_bound[i] <= *v && max_bound[i] >= *v
+            elt.coordinates().enumerate().all(|(i,v)| {
+                min_bound[i] <= v && max_bound[i] >= v
             })
         }).collect()
     }
@@ -21,9 +19,17 @@ impl<'a, T, Elt, const NB_DIM:usize> ParetoFront<'a,T,Elt,
     fn pop_minimum_element(&mut self, dim:usize) -> Option<Elt> {
         if self.elements.is_empty() { return None; }
         let min_pos = self.elements.iter().enumerate()
-            .min_by_key(|(_,elt)| &elt.coordinates()[dim])
+            .min_by_key(|(_,elt)| elt.kth(dim))
             .map(|(pos,_)| pos).unwrap();
         Some(self.elements.swap_remove(min_pos))
+    }
+
+    fn peek_minimum_element(&mut self, dim:usize) -> Option<&Elt> {
+        if self.elements.is_empty() { return None; }
+        let min_pos = self.elements.iter().enumerate()
+            .min_by_key(|(_,elt)| elt.kth(dim))
+            .map(|(pos,_)| pos).unwrap();
+        Some(&self.elements[min_pos])
     }
 
     fn find_dominating(&self, elt:&Elt) -> Option<&Elt> {
@@ -56,8 +62,8 @@ impl<'a, T, Elt, const NB_DIM:usize> ParetoFront<'a,T,Elt,
         }
     }
 
-    fn iter(&'a self) -> core::slice::Iter<'a,Elt> {
-        self.elements.iter()
+    fn create_empty() -> Self {
+        Self::default()
     }
 }
 
@@ -72,10 +78,7 @@ impl<Elt> Default for ListParetoFront<Elt> {
 pub mod test {
     use super::*;
 
-    use crate::pareto_pq::util::{
-        CartesianParetoElement,
-        generate_2d_visualization
-    };
+    use crate::pareto_pq::util::CartesianParetoElement;
 
     #[test]
     pub fn test_some_inserts() {
@@ -83,15 +86,5 @@ pub mod test {
         assert!(front.insert(CartesianParetoElement::<2>::new([1,0])));
         assert!(front.insert(CartesianParetoElement::<2>::new([0,1])));
         assert!(!front.insert(CartesianParetoElement::<2>::new([1,1])));
-        assert_eq!(front.iter().len(), 2);
-    }
-
-    #[test]
-    pub fn test_gen_viz() {
-        let mut front = ListParetoFront::<CartesianParetoElement<2>>::default();
-        assert!(front.insert(CartesianParetoElement::<2>::new([1,0])));
-        assert!(front.insert(CartesianParetoElement::<2>::new([0,1])));
-        assert!(!front.insert(CartesianParetoElement::<2>::new([1,1])));
-        println!("{}", generate_2d_visualization(&front));
     }
 }

@@ -1,10 +1,21 @@
 /// Pareto element trait. Defines an element present on the pareto front.
-pub trait ParetoElement<T:Ord, const NB_DIM:usize> {
+pub trait ParetoElement<T:Ord> {
+    /// Iterator trait over the coordinates of the element
+    type CoordIterator: Iterator<Item=T>;
+
     /// returns the dimensions of the element
-    fn coordinates(&self) -> &[T;NB_DIM];
+    /// the return value has to match the number of dimensions of the element
+    fn coordinates(&self) -> Self::CoordIterator;
 
     /// returns true iff the element dominates the other
     fn dominates(&self, other:&Self) -> bool;
+
+    /// returns the number of dimensions
+    fn nb_dimensions(&self) -> usize;
+
+    /// returns the k-th coordinate
+    fn kth(&self, k:usize) -> T;
+
 }
 
 
@@ -15,14 +26,17 @@ pub trait ParetoElement<T:Ord, const NB_DIM:usize> {
 ///  - ItQuery: Iterator over a query of the front
 ///  - It: Iterator over the elements of the front
 ///  - NB_DIM: number of dimensions
-pub trait ParetoFront<'a, T, Elt, It, const NB_DIM:usize>
-where T:Ord, Elt:'a+ParetoElement<T,NB_DIM>+Eq, It:Iterator<Item=&'a Elt> {
+pub trait ParetoFront<T, Elt>
+where T:Ord, Elt:ParetoElement<T>+Eq {
 
     /// Returns the list of elements intersecting the query (borders included)
-    fn query(&'a self, min_bound:&[T;NB_DIM], max_bound:&[T;NB_DIM]) -> Vec<&'a Elt>;
+    fn query(&self, min_bound:&[T], max_bound:&[T]) -> Vec<&Elt>;
 
     /// Returns and removes the element with minimum value on dimension `dim`
     fn pop_minimum_element(&mut self, dim:usize) -> Option<Elt>;
+
+    /// Returns the element with minimum value on dimension `dim`
+    fn peek_minimum_element(&mut self, dim:usize) -> Option<&Elt>;
 
     /// Returns an element dominating the current one if it exists
     fn find_dominating(&self, elt:&Elt) -> Option<&Elt>;
@@ -36,8 +50,8 @@ where T:Ord, Elt:'a+ParetoElement<T,NB_DIM>+Eq, It:Iterator<Item=&'a Elt> {
     /// Returns true iff the element existed and was removed
     fn remove(&mut self, elt:&Elt) -> bool;
 
-    /// iterator over the elements in the front
-    fn iter(&'a self) -> It;
+    /// creates a new empty instance
+    fn create_empty() -> Self;
 }
 
 /// Simple Pareto front using a list to store labels.
