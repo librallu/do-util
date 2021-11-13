@@ -37,23 +37,6 @@ where T:Ord+Copy, Elt:ParetoElement<T>{
     /// returns the bounds of the link
     pub fn bounds(&self) -> &[(T,T);NB_DIM] { &self.b }
 
-    // /// returns true iff the node is a leaf
-    // pub fn is_leaf(&self) -> bool { self.l.is_none() && self.r.is_none() }
-
-    // /// detach the left child and return it
-    // pub fn detach_left(&mut self) -> Link<Elt,NB_DIM> {
-    //     let mut res = None;
-    //     swap(&mut res, &mut self.l);
-    //     res
-    // }
-
-    // /// detach the right child and return it
-    // pub fn detach_right(&mut self) -> Link<Elt,NB_DIM> {
-    //     let mut res = None;
-    //     swap(&mut res, &mut self.r);
-    //     res
-    // }
-
     /// attch the sub-tree into the left child. Returns the previous left child
     pub fn attach_left(&mut self, t:Link<T,Elt,NB_DIM>) -> Link<T,Elt,NB_DIM> {
         let mut res = t;
@@ -136,34 +119,6 @@ impl<T, Elt, const NB_DIM:usize> Default for KDTreeFront<T, Elt, NB_DIM> {
 impl<T:Ord, Elt, const NB_DIM:usize> KDTreeFront<T, Elt, NB_DIM>
 where Elt:ParetoElement<T>+Eq+std::fmt::Debug, T:Copy+std::fmt::Debug {
 
-    // /// pretty print of the tree structure (only for small trees)
-    // fn pretty_print_node(node:&Node<T, Elt,NB_DIM>, prefix:&str) {
-    //     println!("{}+ {:?} {:?}", prefix, node.elt(), node.bounds());
-    //     match node.left() {
-    //         None => println!("{}|\tEmpty", prefix),
-    //         Some(n) => Self::pretty_print_node(
-    //             &*n,
-    //             format!("{}|\t", prefix).as_str()
-    //         )
-    //     }
-    //     match node.right() {
-    //         None => println!("{}|\tEmpty", prefix),
-    //         Some(n) => Self::pretty_print_node(
-    //             &*n,
-    //             format!("{}|\t", prefix).as_str()
-    //         )
-    //     }
-    // }
-
-    // /// pretty print the tree structure
-    // fn pretty_print(&self) {
-    //     match &self.root {
-    //         Some(n) => Self::pretty_print_node(&*n, ""),
-    //         None => println!("Empty tree"),
-    //     }
-    // }
-
-
     /// adds the element to a node without any dominance checks
     fn rec_insert_without_check(node:&mut Node<T,Elt,NB_DIM>, elt:Elt, dim:usize) {
         if elt.kth(dim) < node.elt().kth(dim) { // go left
@@ -224,8 +179,8 @@ where Elt:ParetoElement<T>+Eq+std::fmt::Debug, T:Copy+std::fmt::Debug {
         Self::rec_search(&mut self.root, elt, 0)
     }
 
-    /// recursive function to search a minimum node given a dimension
-    fn rec_search_minimum(link:&mut Link<T,Elt,NB_DIM>, dim:usize, target_dim:usize)
+    /// mutable recursive function to search a minimum node given a dimension
+    fn mut_rec_search_minimum(link:&mut Link<T,Elt,NB_DIM>, dim:usize, target_dim:usize)
     -> (&mut Link<T,Elt,NB_DIM>, Option<usize>, Option<T>) {
         match link {
             None => (link, None, None),
@@ -238,26 +193,68 @@ where Elt:ParetoElement<T>+Eq+std::fmt::Debug, T:Copy+std::fmt::Debug {
                     (None, None) => (link, Some(dim), Some(v_e)),
                     (None, Some(vr)) => {
                         if vr < v_e {
-                            Self::rec_search_minimum(
+                            Self::mut_rec_search_minimum(
                                 link.as_mut().unwrap().right_mut(), (dim+1)%NB_DIM, target_dim
                             )
                         } else { (link, Some(dim), Some(v_e)) }
                     },
                     (Some(vl), None) => {
                         if vl < v_e {
-                            Self::rec_search_minimum(
+                            Self::mut_rec_search_minimum(
                                 link.as_mut().unwrap().left_mut(), (dim+1)%NB_DIM, target_dim
                             )
                         } else { (link, Some(dim), Some(v_e)) }
                     },
                     (Some(vl), Some(vr)) => {
                         if vl < v_e && vl < vr {
-                            Self::rec_search_minimum(
+                            Self::mut_rec_search_minimum(
                                 link.as_mut().unwrap().left_mut(), (dim+1)%NB_DIM, target_dim
                             )
                         } else if vr < v_e {
-                            Self::rec_search_minimum(
+                            Self::mut_rec_search_minimum(
                                 link.as_mut().unwrap().right_mut(), (dim+1)%NB_DIM, target_dim
+                            )
+                        } else { (link, Some(dim), Some(v_e)) }
+                    },
+                }
+            }
+        }
+    }
+
+    /// recursive function to search a minimum node given a dimension
+    fn rec_search_minimum(link:&Link<T,Elt,NB_DIM>, dim:usize, target_dim:usize)
+    -> (&Link<T,Elt,NB_DIM>, Option<usize>, Option<T>) {
+        match link {
+            None => (link, None, None),
+            Some(node) => {
+                // identify the direction to search
+                let v_e = node.elt().kth(target_dim);
+                let v_l = node.left().as_ref().map(|n| n.bounds()[target_dim].0);
+                let v_r = node.right().as_ref().map(|n| n.bounds()[target_dim].0);
+                match (v_l, v_r) {
+                    (None, None) => (link, Some(dim), Some(v_e)),
+                    (None, Some(vr)) => {
+                        if vr < v_e {
+                            Self::rec_search_minimum(
+                                link.as_ref().unwrap().right(), (dim+1)%NB_DIM, target_dim
+                            )
+                        } else { (link, Some(dim), Some(v_e)) }
+                    },
+                    (Some(vl), None) => {
+                        if vl < v_e {
+                            Self::rec_search_minimum(
+                                link.as_ref().unwrap().left(), (dim+1)%NB_DIM, target_dim
+                            )
+                        } else { (link, Some(dim), Some(v_e)) }
+                    },
+                    (Some(vl), Some(vr)) => {
+                        if vl < v_e && vl < vr {
+                            Self::rec_search_minimum(
+                                link.as_ref().unwrap().left(), (dim+1)%NB_DIM, target_dim
+                            )
+                        } else if vr < v_e {
+                            Self::rec_search_minimum(
+                                link.as_ref().unwrap().right(), (dim+1)%NB_DIM, target_dim
                             )
                         } else { (link, Some(dim), Some(v_e)) }
                     },
@@ -280,7 +277,7 @@ where Elt:ParetoElement<T>+Eq+std::fmt::Debug, T:Copy+std::fmt::Debug {
                     // then use it to replace (+ remove this "minimum" node).
                     (left , mut right @ Some(_)) => {
                         let (min_link, _, _) =
-                            Self::rec_search_minimum(&mut right, dim, dim);
+                            Self::mut_rec_search_minimum(&mut right, dim, dim);
                         let mut elt = Self::remove_link(min_link, dim).unwrap();
                         swap(&mut elt, &mut node.e);
                         node.l = left;
@@ -294,7 +291,7 @@ where Elt:ParetoElement<T>+Eq+std::fmt::Debug, T:Copy+std::fmt::Debug {
                     (mut left @ Some(_), mut right @ None) => {
                         swap(&mut right, &mut left); // swap left and right subtrees
                         let (min_link, _, _) =
-                            Self::rec_search_minimum(&mut right, dim, dim);
+                            Self::mut_rec_search_minimum(&mut right, dim, dim);
                         let mut elt = Self::remove_link(min_link, dim).unwrap();
                         swap(&mut elt, &mut node.e);
                         node.r = right;
@@ -369,7 +366,7 @@ where T:Ord+Copy+std::fmt::Debug, Elt:ParetoElement<T>+Eq+std::fmt::Debug {
     }
 
     fn pop_minimum_element(&mut self, dim:usize) -> Option<Elt> {
-        let (min_node,min_dim,_) = Self::rec_search_minimum(
+        let (min_node,min_dim,_) = Self::mut_rec_search_minimum(
             &mut self.root, 0, dim
         );
         match min_dim {
@@ -380,9 +377,9 @@ where T:Ord+Copy+std::fmt::Debug, Elt:ParetoElement<T>+Eq+std::fmt::Debug {
         }
     }
 
-    fn peek_minimum_element(&mut self, dim:usize) -> Option<&Elt> {
+    fn peek_minimum_element(&self, dim:usize) -> Option<&Elt> {
         let (min_node,_,_) = Self::rec_search_minimum(
-            &mut self.root, 0, dim
+            &self.root, 0, dim
         );
         min_node.as_ref().map(|e| e.elt())
     }

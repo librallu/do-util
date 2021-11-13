@@ -24,7 +24,7 @@ for ListParetoFront<Elt> where T:Ord, Elt:ParetoElement<T>+Eq {
         Some(self.elements.swap_remove(min_pos))
     }
 
-    fn peek_minimum_element(&mut self, dim:usize) -> Option<&Elt> {
+    fn peek_minimum_element(&self, dim:usize) -> Option<&Elt> {
         if self.elements.is_empty() { return None; }
         let min_pos = self.elements.iter().enumerate()
             .min_by_key(|(_,elt)| elt.kth(dim))

@@ -15,7 +15,6 @@ pub trait ParetoElement<T:Ord> {
 
     /// returns the k-th coordinate
     fn kth(&self, k:usize) -> T;
-
 }
 
 
@@ -36,7 +35,7 @@ where T:Ord, Elt:ParetoElement<T>+Eq {
     fn pop_minimum_element(&mut self, dim:usize) -> Option<Elt>;
 
     /// Returns the element with minimum value on dimension `dim`
-    fn peek_minimum_element(&mut self, dim:usize) -> Option<&Elt>;
+    fn peek_minimum_element(&self, dim:usize) -> Option<&Elt>;
 
     /// Returns an element dominating the current one if it exists
     fn find_dominating(&self, elt:&Elt) -> Option<&Elt>;
@@ -54,6 +53,9 @@ where T:Ord, Elt:ParetoElement<T>+Eq {
     fn create_empty() -> Self;
 }
 
+/// utility functions & data-structures
+pub mod util;
+
 /// Simple Pareto front using a list to store labels.
 ///  - peek_min: O(1)
 ///  - insert: O(1)
@@ -65,6 +67,3 @@ pub mod list;
 /// maintains the pareto front as a tree-structure, in which each node stores a pareto element and
 /// possibly children dividing the space
 pub mod kd_tree;
-
-/// utility functions & data-structures
-pub mod util;

@@ -38,7 +38,6 @@ the dimension dominance.
  - [ ] **R-tree:** Data-structure in which elements are stored in bounding boxes. Bounding boxes may intersect.
  - [ ] **R\*-tree:**
  - [ ] **Dense-grid list:** Flat data-structure that stores each element in "buckets" of predefined size. When it is created, the grid list has to be defined with a bucket-size for each dimension and kwnow bounds for each dimension.
- - [ ] **Sparse-grid list**
 
 
 ### Benchmarks

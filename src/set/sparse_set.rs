@@ -12,7 +12,7 @@
 pub struct SparseSet {
     /// list of (unsorted) values
     dense: Vec<usize>,
-    /// sparse[i] = v <=> dense[v] = i
+    /// sparse\[i\] = v <=> dense\[v\] = i
     sparse: Vec<usize>,
     /// maximum number of elements
     nb_max: usize,
