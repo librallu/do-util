@@ -329,7 +329,9 @@ where Elt:ParetoElement<T>+Eq+std::fmt::Debug, T:Copy+std::fmt::Debug {
                 for (i,d) in elt.coordinates().enumerate() {
                     if d < node.bounds()[i].0 { return None; }
                 }
-                if node.elt().dominates(elt) { Some(node.elt()) }
+                if node.elt().dominates(elt) {
+                    Some(node.elt())
+                }
                 else {
                     match Self::rec_exists_dominating(node.left(), elt) {
                         Some(e) => Some(e),
