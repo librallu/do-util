@@ -41,7 +41,7 @@ where T:Ord, Elt:ParetoElement<T>+Eq {
     fn find_dominating(&self, elt:&Elt) -> Option<&Elt>;
 
     /// Inserts an element in the pareto front
-    ///  - if the element is dominated, returns false
+    ///  - if the element is dominated, returns false, otherwise, returns true.
     ///  - if the element dominates some other elements, these elements are removed
     fn insert(&mut self, elt:Elt) -> bool;
 

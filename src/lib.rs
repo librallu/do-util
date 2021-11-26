@@ -29,3 +29,6 @@ pub mod pareto_pq;
 
 /// defines set data-structures
 pub mod set;
+
+/// defines set store data-structures
+pub mod set_store;

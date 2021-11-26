@@ -66,10 +66,6 @@ pub fn bench_pareto<const NB_DIM:usize>(nb_elts:usize) {
     println!("List structure:");
     let list_front:ListParetoFront<CartesianParetoElement<NB_DIM>> = ListParetoFront::default();
     perform_bench(&elements, list_front);
-    // // TEST NAIVE KD-TREE
-    // println!("Naive kd-tree structure:");
-    // let naive_kdtree_front:NaiveKDTreeFront<u16, CartesianParetoElement<NB_DIM>, NB_DIM> = NaiveKDTreeFront::default();
-    // perform_bench(&elements, naive_kdtree_front);
     // TEST KD-TREE
     println!("kd-tree structure:");
     let kdtree_front:KDTreeFront<u16, CartesianParetoElement<NB_DIM>, NB_DIM> = KDTreeFront::default();

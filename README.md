@@ -2,6 +2,8 @@
 
 Implements various useful data-structures for discrete optimization. This crate is in active development, Pull requests welcome :).
 
+
+
 ## Set data-structures
 
 Various data-structures to maintain efficiently sets
@@ -14,19 +16,19 @@ Various data-structures to maintain efficiently sets
 
 ## Sub-set/Super-set queries
 
-Allows performing quick sub-set or super-set queries
+Allows performing quick sub-set or super-set queries.
 
+ - [X] **List** Simple naive list storage. Iterates over the whole list to find sub-sets/super-sets
  - [ ] **Set-trie** See [this article](https://hal.inria.fr/hal-01506780/document) for more information.
  - [ ] **HAT-trie** See [this article](https://ieeexplore.ieee.org/document/8478414) for more information.
 
 ### Benchmarks
 
-Set covering pre-processing.
-
 
 ## Pareto priority-queues
 
-Data-structures for quick insertion/removal/find-minimum/dominance-checks on an n-dimensional pareto front.
+Data-structures for quick insertion/removal/find-minimum/dominance-checks on an n-dimensional pareto front. Each element also provides a "guide" value that is used for minimum (resp. maximum) extraction.
+
 Heavily inspired from the excellent [pareto library for Python and C++](https://github.com/alandefreitas/pareto) [[1]](#1). Each Pareto front stores elements such that no element dominates another. The main
 difference is that the data-structures in this crate allow to find the minimum element quickly.
 Moreover, using this crate, it is possible to define more general dominance rules in addition of
@@ -37,12 +39,19 @@ the dimension dominance.
  - [ ] **Point-region-tree:** Data-structure in which each node divides the space into 2**d sub-regions. This data-structure is efficient for a large number of points, but requires an initial lower/upper bound on the dimentions.
  - [ ] **R-tree:** Data-structure in which elements are stored in bounding boxes. Bounding boxes may intersect.
  - [ ] **R\*-tree:**
- - [ ] **Dense-grid list:** Flat data-structure that stores each element in "buckets" of predefined size. When it is created, the grid list has to be defined with a bucket-size for each dimension and kwnow bounds for each dimension.
-
 
 ### Benchmarks
 
-Random n-dimentional points. 
+Random n-dimentional points.
+
+
+
+## Roadmap
+
+- [ ] do-util-benchmarks project
+- [ ] refactor pareto-pq to priority queue
+- [ ] add guide in list pareto
+- [ ] add guide in kd-tree pareto
 
 
 ## References
