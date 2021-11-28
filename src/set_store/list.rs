@@ -8,7 +8,7 @@ use super::SetStore;
 /// - deletion: O(n)
 /// - find_subsets: O(n)
 /// - find_supersets: O(n)
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct ListSetStore<T> {
     list:Vec<Vec<T>>
 }
@@ -17,11 +17,15 @@ impl<T:Copy+Eq+Ord> SetStore<T> for ListSetStore<T> {
     type SubsetIterator = std::vec::IntoIter<Vec<T>>;
     type SupersetIterator = std::vec::IntoIter<Vec<T>>;
 
-    /// In this implementation, we do not check if the element was already existing in the set.
+    /// In this implementation, we perform a linear check if the element already exists.
     /// Another implementation would use a HashMap to store which elements were inserted or not.
     fn insert(&mut self, s:&[T]) -> bool {
-        self.list.push(s.iter().copied().collect());
-        true
+        if self.list.iter().any(|e| e==s) {
+            false
+        } else {
+            self.list.push(s.iter().copied().collect());
+            true
+        }
     }
 
     fn remove(&mut self, s:&[T]) -> bool {
@@ -70,6 +74,7 @@ pub mod test {
     fn test_subset() {
         assert!(ListSetStore::<usize>::is_subset(&[], &[]));
         assert!(ListSetStore::<usize>::is_subset(&[], &[1]));
+        assert!(ListSetStore::<usize>::is_subset(&[1], &[1]));
         assert!(ListSetStore::<usize>::is_subset(&[], &[1,2]));
         assert!(ListSetStore::<usize>::is_subset(&[1], &[1,2]));
         assert!(ListSetStore::<usize>::is_subset(&[1,2], &[1,2]));

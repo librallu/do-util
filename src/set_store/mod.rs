@@ -30,4 +30,8 @@ pub trait SetStore<T:Copy+Eq> {
 /// 
 /// Linear complexities, but should be fast for a small number of sets.
 pub mod list;
-mod set_trie;
+
+/// Stores sets in a trie.
+/// 
+/// Quick sub-set/super-set enumeration
+pub mod set_trie;

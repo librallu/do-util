@@ -166,29 +166,30 @@ impl TrieSetStore {
         res
     }
 
-    // pub fn to_graphviz(&self) -> String {
-    //     let mut res = "digraph {\n".to_string();
-    //     if let Some(n) = &self.root {
-    //         res += Self::node_to_graphviz(n, 0).0.as_str();
-    //     }
-    //     res += "}";
-    //     res
-    // }
+    /// generates the graphviz representation of the trie.
+    pub fn to_graphviz(&self) -> String {
+        let mut res = "digraph {\n".to_string();
+        if let Some(n) = &self.root {
+            res += Self::node_to_graphviz(n, 0).0.as_str();
+        }
+        res += "}";
+        res
+    }
 
-    // fn node_to_graphviz(node:&Node, id:usize) -> (String,usize) {
-    //     let shape = if node.contains_set { "doublecircle" } else { "circle" };
-    //     let mut res = format!("\t{} [label=\"{}\",shape=\"{}\"];\n", id, node.nb_children, shape);
-    //     let mut current_id = id+1;
-    //     for (v,child) in node.children.iter().enumerate() {
-    //         if let Some(c) = child {
-    //             res += format!("\t{} -> {} [label=\"{}\"];\n", id, current_id, v).as_str();
-    //             let (tmp_str, next_id) = Self::node_to_graphviz(c, current_id);
-    //             res += tmp_str.as_str();
-    //             current_id = next_id;
-    //         }
-    //     }
-    //     (res, current_id)
-    // }
+    fn node_to_graphviz(node:&Node, id:usize) -> (String,usize) {
+        let shape = if node.contains_set { "doublecircle" } else { "circle" };
+        let mut res = format!("\t{} [label=\"\",shape=\"{}\"];\n", id, shape);
+        let mut current_id = id+1;
+        for (v,child) in node.children.iter().enumerate() {
+            if let Some(c) = child {
+                res += format!("\t{} -> {} [label=\"{}\"];\n", id, current_id, v).as_str();
+                let (tmp_str, next_id) = Self::node_to_graphviz(c, current_id);
+                res += tmp_str.as_str();
+                current_id = next_id;
+            }
+        }
+        (res, current_id)
+    }
 
     /// removes e[index:] from node
     fn remove_rec<T:Copy+Eq+Into<usize>>(node:&mut Option<Box<Node>>, e:&[T], index:usize) -> bool {
