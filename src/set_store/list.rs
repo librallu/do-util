@@ -14,10 +14,14 @@ pub struct ListSetStore<T> {
 }
 
 impl<T:Copy+Eq+Ord> SetStore<T> for ListSetStore<T> {
-    type SetIterator = std::vec::IntoIter<Vec<T>>;
+    type SubsetIterator = std::vec::IntoIter<Vec<T>>;
+    type SupersetIterator = std::vec::IntoIter<Vec<T>>;
 
-    fn insert(&mut self, s:&[T]) {
+    /// In this implementation, we do not check if the element was already existing in the set.
+    /// Another implementation would use a HashMap to store which elements were inserted or not.
+    fn insert(&mut self, s:&[T]) -> bool {
         self.list.push(s.iter().copied().collect());
+        true
     }
 
     fn remove(&mut self, s:&[T]) -> bool {
@@ -27,12 +31,12 @@ impl<T:Copy+Eq+Ord> SetStore<T> for ListSetStore<T> {
         next_size < previous_size
     }
 
-    fn find_subsets(&self, s:&[T]) -> Self::SetIterator {
+    fn find_subsets(&self, s:&[T]) -> Self::SubsetIterator {
         self.list.iter().filter(|e| Self::is_subset(e, s)).cloned()
             .collect::<Vec<Vec<T>>>().into_iter()
     }
 
-    fn find_supersets(&self, s:&[T]) -> Self::SetIterator {
+    fn find_supersets(&self, s:&[T]) -> Self::SupersetIterator {
         self.list.iter().filter(|e| Self::is_subset(s, e)).cloned()
             .collect::<Vec<Vec<T>>>().into_iter()
     }
