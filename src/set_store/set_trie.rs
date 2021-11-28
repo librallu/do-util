@@ -107,7 +107,6 @@ impl TrieSetStore {
     fn rec_find_subsets<T:Copy+Eq+Into<usize>>(node:&Option<Box<Node>>, e:&[T], index:usize, selected:Vec<T>)
     -> Vec<Vec<T>> {
         let mut res = Vec::new();
-        if index >= e.len() { return res; }
         match node {
             None => { return res; }
             Some(n) => {
