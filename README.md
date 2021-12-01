@@ -19,7 +19,8 @@ Various data-structures to maintain efficiently sets
 Allows performing quick sub-set or super-set queries.
 
  - [X] **List** Simple naive list storage. Iterates over the whole list to find sub-sets/super-sets
- - [ ] **Set-trie** See [this article](https://hal.inria.fr/hal-01506780/document) for more information.
+ - [X] **Set-trie** See [this article](https://hal.inria.fr/hal-01506780/document) for more information.
+       It is fast for sub-set queries, slower for super-set queries. Is efficient if the number of elements in sets is small.
  - [ ] **HAT-trie** See [this article](https://ieeexplore.ieee.org/document/8478414) for more information.
 
 ### Benchmarks
@@ -35,20 +36,19 @@ Moreover, using this crate, it is possible to define more general dominance rule
 the dimension dominance.
 
  - [X] **List Pareto front:** Simple data-structure that simply stores the elements using a vector. This data-structure is straightforward, and usually works fine for small 
- - [X] **Kd-tree:** Data-structure in which each node contains an element and divides the space into 2 parts. This data-structure is efficient for a large number of points.
- - [ ] **Point-region-tree:** Data-structure in which each node divides the space into 2**d sub-regions. This data-structure is efficient for a large number of points, but requires an initial lower/upper bound on the dimentions.
+ - [X] **Kd-tree:** Data-structure in which each node contains an element and divides the space into 2 parts. This data-structure is efficient for many points.
+ - [ ] **Point-region-tree:** Data-structure in which each node divides the space into 2**d subregions. This data-structure is efficient for many points, but requires an initial lower/upper bound on the dimensions.
  - [ ] **R-tree:** Data-structure in which elements are stored in bounding boxes. Bounding boxes may intersect.
  - [ ] **R\*-tree:**
 
 ### Benchmarks
 
-Random n-dimentional points.
+Random n-dimensional points.
 
 
 
 ## Roadmap
 
-- [ ] do-util-benchmarks project
 - [ ] refactor pareto-pq to priority queue
 - [ ] add guide in list pareto
 - [ ] add guide in kd-tree pareto
