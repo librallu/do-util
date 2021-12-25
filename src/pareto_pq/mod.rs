@@ -37,6 +37,11 @@ where T:Ord, Elt:ParetoElement<T>+Eq {
     /// Returns the element with minimum value on dimension `dim`
     fn peek_minimum_element(&self, dim:usize) -> Option<&Elt>;
 
+    /// Returns the minimum value on coordinate `dim`
+    fn peek_minimum_coordinate(&self, dim:usize) -> Option<T> {
+        self.peek_minimum_element(dim).map(|e| e.kth(dim))
+    }
+
     /// Returns an element dominating the current one if it exists
     fn find_dominating(&self, elt:&Elt) -> Option<&Elt>;
 
@@ -50,7 +55,8 @@ where T:Ord, Elt:ParetoElement<T>+Eq {
     fn remove(&mut self, elt:&Elt) -> bool;
 
     /// creates a new empty instance
-    fn create_empty() -> Self;
+    /// discretization_hint: slice of (LB,UB,step)
+    fn create_empty(discretization_hint:&[Option<(T,T,T)>]) -> Self;
 }
 
 /// utility functions & data-structures

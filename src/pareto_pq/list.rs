@@ -62,7 +62,7 @@ for ListParetoFront<Elt> where T:Ord, Elt:ParetoElement<T>+Eq {
         }
     }
 
-    fn create_empty() -> Self {
+    fn create_empty(_discretization_hint:&[Option<(T,T,T)>]) -> Self {
         Self::default()
     }
 }

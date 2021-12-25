@@ -174,13 +174,36 @@ where Elt:ParetoElement<T>+Eq+std::fmt::Debug, T:Copy+std::fmt::Debug {
         }
     }
 
+    /// recursive search function + bound update.
+    /// Returns the node with its decision dimension (depth % NB_DIM)
+    fn rec_search_and_update_bounds(link:&mut Link<T,Elt,NB_DIM>, elt:&Elt, dim:usize) {
+        if link.is_some() {
+            // let next_link = if
+            // elt.kth(dim) < link.as_ref().unwrap().elt().kth(dim) { // go left
+            //     link.as_mut().unwrap().left_mut()
+            // } else { // go right
+            //     link.as_mut().unwrap().right_mut()
+            // };
+            // Self::rec_search_and_update_bounds(next_link, elt, (dim+1)%NB_DIM);
+            // if let Some(node) = link {
+            //     node.update_bounds();
+            // }
+            // TODO fix bug in the bound update while removing minimum elements. (or removing elements)
+            Self::rec_search_and_update_bounds(link.as_mut().unwrap().left_mut(), elt, (dim+1)%NB_DIM);
+            Self::rec_search_and_update_bounds(link.as_mut().unwrap().right_mut(), elt, (dim+1)%NB_DIM);
+            if let Some(node) = link {
+                node.update_bounds();
+            }
+        }
+    }
+
     /// search an element in the tree. Returns the node and the decision dimension (depth % NB_DIM)
     fn search(&mut self, elt:&Elt) -> (&mut Link<T,Elt,NB_DIM>, Option<usize>) {
         Self::rec_search(&mut self.root, elt, 0)
     }
 
     /// mutable recursive function to search a minimum node given a dimension
-    fn mut_rec_search_minimum(link:&mut Link<T,Elt,NB_DIM>, dim:usize, target_dim:usize)
+    fn mut_rec_search_minimum(link:&mut Link<T,Elt,NB_DIM>, dim:usize, target_dim:usize,)
     -> (&mut Link<T,Elt,NB_DIM>, Option<usize>, Option<T>) {
         match link {
             None => (link, None, None),
@@ -356,6 +379,7 @@ where Elt:ParetoElement<T>+Eq+std::fmt::Debug, T:Copy+std::fmt::Debug {
             }
         }
     }
+
 }
 
 
@@ -373,7 +397,11 @@ where T:Ord+Copy+std::fmt::Debug, Elt:ParetoElement<T>+Eq+std::fmt::Debug {
         );
         match min_dim {
             Some(d) => {
-                Self::remove_link(min_node, d)
+                let res = Self::remove_link(min_node, d);
+                if let Some(elt) = res.as_ref() {
+                    Self::rec_search_and_update_bounds(&mut self.root, elt, 0);
+                }
+                res
             },
             None => None,
         }
@@ -385,6 +413,10 @@ where T:Ord+Copy+std::fmt::Debug, Elt:ParetoElement<T>+Eq+std::fmt::Debug {
         );
         min_node.as_ref().map(|e| e.elt())
     }
+
+    // fn peek_minimum_coordinate(&self, dim:usize) -> Option<T> {
+    //     self.root.as_ref().map(|n| n.bounds()[dim].0)
+    // }
 
     fn find_dominating(&self, elt:&Elt) -> Option<&Elt> {
         Self::rec_exists_dominating(&self.root, elt)
@@ -403,7 +435,7 @@ where T:Ord+Copy+std::fmt::Debug, Elt:ParetoElement<T>+Eq+std::fmt::Debug {
         self.remove_and_return(elt).is_some()
     }
 
-    fn create_empty() -> Self {
+    fn create_empty(_discretization_hint:&[Option<(T,T,T)>]) -> Self {
         Self::default()
     }
 }
@@ -438,7 +470,7 @@ pub mod test {
         front.insert_without_check(CartesianParetoElement::new([10,5]));
         front.insert_without_check(CartesianParetoElement::new([20,0]));
         // front.pretty_print();
-        // assert_eq!(front.search_minimum(0).unwrap(), &CartesianParetoElement::new([0,10]));
+        assert_eq!(front.peek_minimum_element(0).unwrap(), &CartesianParetoElement::new([0,10]));
     }
     
     #[test]
@@ -448,7 +480,7 @@ pub mod test {
         front.insert_without_check(CartesianParetoElement::new([10,5]));
         front.insert_without_check(CartesianParetoElement::new([20,0]));
         // front.pretty_print();
-        // assert_eq!(front.search_minimum(1).unwrap(), &CartesianParetoElement::new([20,0]));
+        assert_eq!(front.peek_minimum_element(1).unwrap(), &CartesianParetoElement::new([20,0]));
     }
 
     #[test]
