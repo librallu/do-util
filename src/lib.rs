@@ -23,6 +23,8 @@
 // #![warn(clippy::cast_precision_loss)]
 // #![warn(clippy::cast_sign_loss)]
 
+/// Implements various priority queues. Including Pareto priority queues.
+pub mod priority_queue;
 
 /// defines Pareto priority-queue data-structures
 pub mod pareto_pq;
