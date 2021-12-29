@@ -47,6 +47,19 @@ pub trait PriorityQueue<T,Elt> where Elt:GuidedElement<T>, T:Ord {
     /// In some situations (for instance pareto priority queues, an insertion does not always
     /// leads to a successful insertion)
     fn insert(&mut self, elt:Elt) -> bool;
+
+    /// returns the minimum guide of the priority queue
+    fn peek_minimum_guide(&self) -> Option<T> {
+        self.peek_minimum().map(|e| e.guide())
+    }
+
+    /// returns the maximum guide of the priority queue
+    fn peek_maximum_guide(&self) -> Option<T> {
+        self.peek_maximum().map(|e| e.guide())
+    }
+
+    /// returns true iff the queue is empty
+    fn is_empty(&self) -> bool { self.peek_minimum().is_none() }
 }
 
 
@@ -62,7 +75,12 @@ pub trait ParetoFront<T,Elt> where T:Ord, Elt:ParetoElement<T> {
 /// 
 /// Implements a Pareto priority queue. Each element is stored in a simple vector.
 /// When inserting, check all other elements for dominations.
-pub mod pareto_pq_list;
+pub mod pareto_list;
+
+/// Kd-tree pareto priority queue.
+/// 
+/// Implements a kd-tree as a pareto priority queue.
+pub mod kd_tree;
 
 /// Utility class
 pub mod util;
