@@ -247,7 +247,7 @@ where T:Ord+Copy, Elt:GuidedElement<T>+ParetoElement<T> {
             Some(node) => {
                 let ge = node.elt().guide();
                 let g_l = node.left().as_ref().map(|n| n.guide_lb);
-                let g_r = node.right().as_ref().map(|n| n.guide_ub);
+                let g_r = node.right().as_ref().map(|n| n.guide_lb);
                 match (g_l,g_r) {
                     (None,None) => (link, Some(dim)),
                     (None,Some(gr)) => {
@@ -288,7 +288,7 @@ where T:Ord+Copy, Elt:GuidedElement<T>+ParetoElement<T> {
             Some(node) => {
                 let ge = node.elt().guide();
                 let g_l = node.left().as_ref().map(|n| n.guide_lb);
-                let g_r = node.right().as_ref().map(|n| n.guide_ub);
+                let g_r = node.right().as_ref().map(|n| n.guide_lb);
                 match (g_l,g_r) {
                     (None,None) => (link, Some(dim)),
                     (None,Some(gr)) => {
