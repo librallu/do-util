@@ -148,7 +148,9 @@ where T:Ord+Copy, Elt:GuidedElement<T>+ParetoElement<T> {
         match dim {
             Some(d) => {
                 let res = Self::remove_link(link, d);
-                Self::rec_update_bounds(&mut self.root);
+                if let Some(elt) = &res {
+                    Self::rec_update_bounds(&mut self.root, elt.guide());
+                }
                 res
             },
             None => None,
@@ -431,13 +433,18 @@ where T:Ord+Copy, Elt:GuidedElement<T>+ParetoElement<T> {
 
     /// recursive update of bounds.
     /// This function should eventually be removed and the update done only when needed
-    fn rec_update_bounds(link:&mut Link<T,Elt,NB_DIM>) {
-        if link.is_some() {
-            Self::rec_update_bounds(link.as_mut().unwrap().left_mut());
-            Self::rec_update_bounds(link.as_mut().unwrap().right_mut());
-            if let Some(node) = link {
-                node.update_bounds();
-            }
+    /// **parameters:**
+    ///  - guide: threshold in which the bound should be updated
+    fn rec_update_bounds(link:&mut Link<T,Elt,NB_DIM>, guide:T) {
+        let mut to_update = false;
+        if let Some(node) = link {
+            // if node.guide_lb == guide { to_update = true; } // update bounds if needed
+            Self::rec_update_bounds(link.as_mut().unwrap().left_mut(), guide);
+            Self::rec_update_bounds(link.as_mut().unwrap().right_mut(), guide);
+            to_update = true;
+        }
+        if to_update {
+            link.as_mut().unwrap().update_bounds();
         }
     }
 }

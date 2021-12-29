@@ -75,6 +75,7 @@ pub trait ParetoFront<T,Elt> where T:Ord, Elt:ParetoElement<T> {
 /// 
 /// Implements a Pareto priority queue. Each element is stored in a simple vector.
 /// When inserting, check all other elements for dominations.
+/// It assumes that if an element e1 dominates an element e2, guide(e1) <= guide(e2)
 pub mod pareto_list;
 
 /// Kd-tree pareto priority queue.
