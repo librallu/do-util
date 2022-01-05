@@ -30,16 +30,16 @@ pub trait GuidedElement<T:Ord> {
 pub trait PriorityQueue<T,Elt> where Elt:GuidedElement<T>, T:Ord {
 
     /// peeks the minimum element in the queue
-    fn peek_minimum(&self) -> Option<&Elt>;
+    fn peek_min(&self) -> Option<&Elt>;
 
     /// peeks the maximum element in the queue
-    fn peek_maximum(&self) -> Option<&Elt>;
+    fn peek_max(&self) -> Option<&Elt>;
 
     /// pops the minimum element in the queue
-    fn pop_minimum(&mut self) -> Option<Elt>;
+    fn pop_min(&mut self) -> Option<Elt>;
 
     /// pops the maximum element in the queue
-    fn pop_maximum(&mut self) -> Option<Elt>;
+    fn pop_max(&mut self) -> Option<Elt>;
 
     /// inserts an element in the queue
     /// 
@@ -49,25 +49,31 @@ pub trait PriorityQueue<T,Elt> where Elt:GuidedElement<T>, T:Ord {
     fn insert(&mut self, elt:Elt) -> bool;
 
     /// returns the minimum guide of the priority queue
-    fn peek_minimum_guide(&self) -> Option<T> {
-        self.peek_minimum().map(|e| e.guide())
+    fn peek_min_guide(&self) -> Option<T> {
+        self.peek_min().map(|e| e.guide())
     }
 
     /// returns the maximum guide of the priority queue
-    fn peek_maximum_guide(&self) -> Option<T> {
-        self.peek_maximum().map(|e| e.guide())
+    fn peek_max_guide(&self) -> Option<T> {
+        self.peek_max().map(|e| e.guide())
     }
 
     /// returns true iff the queue is empty
-    fn is_empty(&self) -> bool { self.peek_minimum().is_none() }
+    fn is_empty(&self) -> bool { self.peek_min().is_none() }
 }
 
 
 /// Implements pareto front specific functions
-pub trait ParetoFront<T,Elt> where T:Ord, Elt:ParetoElement<T> {
+pub trait ParetoFront<T,Elt>:Default where T:Ord, Elt:ParetoElement<T> {
 
     /// returns an element dominating the element if it exists
     fn find_dominating(&self, elt:&Elt) -> Option<&Elt>;
+
+    /// creates a new instance of the pareto front with discretization hints
+    fn new_with_discretization(_hint:&[Option<(T,T,T)>]) -> Self {
+        Self::default()
+    }
+    
 }
 
 

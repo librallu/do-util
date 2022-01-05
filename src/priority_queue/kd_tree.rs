@@ -134,16 +134,16 @@ impl<T, Elt, const NB_DIM:usize> Default for KDTreeFront<T, Elt, NB_DIM> {
 
 impl<T, Elt, const NB_DIM:usize> PriorityQueue<T, Elt> for KDTreeFront<T, Elt, NB_DIM>
 where T:Ord+Copy, Elt:GuidedElement<T>+ParetoElement<T> {
-    fn peek_minimum(&self) -> Option<&Elt> {
+    fn peek_min(&self) -> Option<&Elt> {
         let (link,_) = Self::rec_search_min_guide(&self.root, 0);
         link.as_ref().map(|n| n.elt())
     }
 
-    fn peek_maximum(&self) -> Option<&Elt> {
+    fn peek_max(&self) -> Option<&Elt> {
         todo!()
     }
 
-    fn pop_minimum(&mut self) -> Option<Elt> {
+    fn pop_min(&mut self) -> Option<Elt> {
         let (link,dim) = Self::mut_rec_search_min_guide(&mut self.root, 0);
         match dim {
             Some(d) => {
@@ -157,7 +157,7 @@ where T:Ord+Copy, Elt:GuidedElement<T>+ParetoElement<T> {
         }
     }
 
-    fn pop_maximum(&mut self) -> Option<Elt> {
+    fn pop_max(&mut self) -> Option<Elt> {
         todo!()
     }
 
@@ -170,11 +170,11 @@ where T:Ord+Copy, Elt:GuidedElement<T>+ParetoElement<T> {
         true
     }
 
-    fn peek_minimum_guide(&self) -> Option<T> {
+    fn peek_min_guide(&self) -> Option<T> {
         self.root.as_ref().map(|node| node.guide_lb)
     }
 
-    fn peek_maximum_guide(&self) -> Option<T> {
+    fn peek_max_guide(&self) -> Option<T> {
         self.root.as_ref().map(|node| node.guide_ub)
     }
 }
@@ -437,7 +437,7 @@ where T:Ord+Copy, Elt:GuidedElement<T>+ParetoElement<T> {
     ///  - guide: threshold in which the bound should be updated
     fn rec_update_bounds(link:&mut Link<T,Elt,NB_DIM>, guide:T) {
         let mut to_update = false;
-        if let Some(node) = link {
+        if let Some(_node) = link {
             // if node.guide_lb == guide { to_update = true; } // update bounds if needed
             Self::rec_update_bounds(link.as_mut().unwrap().left_mut(), guide);
             Self::rec_update_bounds(link.as_mut().unwrap().right_mut(), guide);
@@ -464,21 +464,21 @@ pub mod test {
         front.insert(CartesianParetoElement::new([10,5]));
         front.insert(CartesianParetoElement::new([20,0]));
         // front.pretty_print();
-        assert_eq!(front.peek_minimum().unwrap(), &CartesianParetoElement::new([0,10]));
-        assert_eq!(front.peek_minimum_guide().unwrap(), 10);
+        assert_eq!(front.peek_min().unwrap(), &CartesianParetoElement::new([0,10]));
+        assert_eq!(front.peek_min_guide().unwrap(), 10);
     }
 
     #[test]
     pub fn test_remove_empty() {
         let mut front:KDTreeFront<u32, CartesianParetoElement<2>, 2> = KDTreeFront::default();
-        assert!(front.pop_minimum().is_none());
+        assert!(front.pop_min().is_none());
     }
 
     #[test]
     pub fn test_remove_1() {
         let mut front:KDTreeFront<u32, CartesianParetoElement<2>, 2> = KDTreeFront::default();
         front.insert(CartesianParetoElement::new([10,10]));
-        assert!(front.pop_minimum().is_some());
+        assert!(front.pop_min().is_some());
         assert!(front.is_empty());
     }
 
@@ -488,7 +488,7 @@ pub mod test {
         front.insert(CartesianParetoElement::new([10,10]));
         front.insert(CartesianParetoElement::new([5,5]));
         front.insert(CartesianParetoElement::new([20,20]));
-        assert_eq!(front.pop_minimum(), Some(CartesianParetoElement::new([5,5])));
+        assert_eq!(front.pop_min(), Some(CartesianParetoElement::new([5,5])));
     }
 
     #[test]
@@ -496,8 +496,8 @@ pub mod test {
         let mut front:KDTreeFront<u32, CartesianParetoElement<2>, 2> = KDTreeFront::default();
         front.insert(CartesianParetoElement::new([5,10]));
         front.insert(CartesianParetoElement::new([10,6]));
-        assert_eq!(front.pop_minimum().unwrap(), CartesianParetoElement::new([5,10]));
-        assert_eq!(front.pop_minimum().unwrap(), CartesianParetoElement::new([10,6]));
+        assert_eq!(front.pop_min().unwrap(), CartesianParetoElement::new([5,10]));
+        assert_eq!(front.pop_min().unwrap(), CartesianParetoElement::new([10,6]));
         assert!(front.is_empty());
     }
 
@@ -506,7 +506,7 @@ pub mod test {
         let mut front:KDTreeFront<u32, CartesianParetoElement<2>, 2> = KDTreeFront::default();
         assert!(front.insert(CartesianParetoElement::new([5,5])));
         assert!(!front.insert(CartesianParetoElement::new([10,10])));
-        assert_eq!(front.pop_minimum().unwrap(), CartesianParetoElement::new([5,5]));
+        assert_eq!(front.pop_min().unwrap(), CartesianParetoElement::new([5,5]));
         assert!(front.is_empty());
     }
 
@@ -515,7 +515,7 @@ pub mod test {
         let mut front:KDTreeFront<u32, CartesianParetoElement<2>, 2> = KDTreeFront::default();
         assert!(front.insert(CartesianParetoElement::new([10,10])));
         assert!(front.insert(CartesianParetoElement::new([5,5])));
-        assert_eq!(front.pop_minimum().unwrap(), CartesianParetoElement::new([5,5]));
+        assert_eq!(front.pop_min().unwrap(), CartesianParetoElement::new([5,5]));
         assert!(front.is_empty());
     }
 
