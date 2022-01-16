@@ -47,13 +47,6 @@ Random n-dimensional points.
 
 
 
-## Roadmap
-
-- [ ] refactor pareto-pq to priority queue
-- [ ] add guide in list pareto
-- [ ] add guide in kd-tree pareto
-
-
 ## References
 
 <a id="1">[1]</a> Alan Freitas,

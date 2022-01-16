@@ -26,9 +26,6 @@
 /// Implements various priority queues. Including Pareto priority queues.
 pub mod priority_queue;
 
-/// defines Pareto priority-queue data-structures
-pub mod pareto_pq;
-
 /// defines set data-structures
 pub mod set;
 
