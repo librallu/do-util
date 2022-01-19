@@ -3,6 +3,7 @@ name = "do_util"
 description = "Discrete Optimization utilitary library (data-structures)"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
 
 [lib]
 name = "do_util"
